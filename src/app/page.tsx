@@ -8,6 +8,8 @@ export default function Home() {
       <Image
         src="https://media.licdn.com/dms/image/D4E3DAQHmWBliOYHkBA/image-scale_191_1128/0/1676393049809/delosi_sa_cover?e=1700625600&v=beta&t=P4WJlwsTMgSH1GEzGg_hPXuhlpoLvR_92F79w606k4k"
         alt="logo de marcas"
+        width={1000}
+        height={400}
       />
     </main>
   );
