@@ -15,9 +15,3 @@ const MatrixResult: FC<MatrixResultProps> = ({ result }) => {
 };
 
 export default MatrixResult;
-
-// PENDIENTES
-// - Manejar los errores
-// - Hacer testing
-// - Implementar otros archivos?
-// - Armar un readme rapido

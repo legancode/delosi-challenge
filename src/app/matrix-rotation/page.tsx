@@ -6,6 +6,8 @@ import { Matrix } from '@/app/matrix-rotation/domain/matrix.interface';
 import { transformToArray } from '@/utilities/transform-to-array';
 import { defaultFlattenedMatrix, defaultGeneratedMatrix } from './domain/config';
 import { MatrixResult } from './components/MatrixResult';
+import { handleError } from '@/utilities/handle-error/handle-error';
+import { useAppDispatch } from '@/store/app.context';
 
 interface MatrixResult {
   isGenerated: boolean;
@@ -22,6 +24,7 @@ const defaultMatrixResult: MatrixResult = {
 const MatrixRotationPage = () => {
   const [matrixInput, setMatrixInput] = useState('');
   const [matrixResult, setMatrixResult] = useState<MatrixResult>(defaultMatrixResult);
+  const dispatchApp = useAppDispatch();
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
@@ -29,38 +32,52 @@ const MatrixRotationPage = () => {
     setMatrixInput(value);
   };
 
-  // [[1,2,3],[4,5,6],[7,8,9]]
-  // [[1,2,3,4],[4,5,6,7],[7,8,9,10],[11,12,13,14]]
-  // [[1,2,3,4,5],[4,5,6,7,5],[7,8,9,10,3],[11,12,13,14,3],[1,23,4,5,5]]
-
   const generateMatrix = () => {
-    if (!matrixInput) return;
+    try {
+      if (!matrixInput) return;
 
-    // Validar matriz
-    const newMatrix = transformToArray(matrixInput) as Matrix;
+      const newMatrix = transformToArray(matrixInput) as Matrix;
 
-    setMatrixResult({
-      isGenerated: true,
-      output: newMatrix,
-      flattened: newMatrix.flat(),
-    });
+      setMatrixResult({
+        isGenerated: true,
+        output: newMatrix,
+        flattened: newMatrix.flat(),
+      });
+    } catch (error: any) {
+      handleError({ dispatchApp, error });
+    }
   };
 
-  const rotateMatrix = () => {
-    if (!matrixInput) return;
-    console.log('rotate');
-    const matrixSideSize = matrixResult.output.length;
-    const orderedMatrix: Matrix = Array.from({ length: matrixSideSize }, () => []);
+  const rotateClockWise = (matrix: Matrix, orderedMatrix: Matrix) => {
+    matrix.reverse();
 
-    matrixResult.output.forEach((row, rowIndex) => {
-      // 1. rotar arrays internamente
-      row.reverse().forEach((item, itemIndex) => {
-        // 2. Obtener los primeros items de cada array y guardarlo en nuevo array
+    matrix.forEach((row, rowIndex) => {
+      row.forEach((item, itemIndex) => {
         orderedMatrix[itemIndex][rowIndex] = item;
       });
     });
+  };
 
-    // 3. Guardar el nuevo array en matrixOutput
+  const rotateCounterClockWise = (matrix: Matrix, orderedMatrix: Matrix) => {
+    matrix.forEach((row, rowIndex) => {
+      row.reverse().forEach((item, itemIndex) => {
+        orderedMatrix[itemIndex][rowIndex] = item;
+      });
+    });
+  };
+
+  const rotateMatrix = (clockWise: boolean) => {
+    if (!matrixInput) return;
+
+    const matrixSideSize = matrixResult.output.length;
+    const orderedMatrix: Matrix = Array.from({ length: matrixSideSize }, () => []);
+
+    if (clockWise) {
+      rotateClockWise(matrixResult.output, orderedMatrix);
+    } else {
+      rotateCounterClockWise(matrixResult.output, orderedMatrix);
+    }
+
     setMatrixResult((prev) => ({
       ...prev,
       output: orderedMatrix,
@@ -92,21 +109,31 @@ const MatrixRotationPage = () => {
           </button>
         </div>
 
-        <span className='block text-gray-500 text-md mt-2'>Ejemplo: [[1,2],[3,4]]</span>
+        <span className='block text-gray-500 text-md mt-4'>Ejemplo: [[1,2,3],[4,5,6],[7,8,9]]</span>
 
-        <MatrixGroup className=' my-8 w-full max-w-[25rem] h-[25rem]' sideSize={matrixResult.output.length}>
+        <MatrixGroup className='mt-6 mb-8 w-full max-w-[25rem] h-[25rem]' sideSize={matrixResult.output.length}>
           {matrixResult.flattened.map((item, index) => (
             <MatrixItem key={index} value={item} />
           ))}
         </MatrixGroup>
 
-        <button
-          className='w-full text-2xl bg-green-light-2 font-semibold text-background py-6 px-10 border border-green-dark-1 hover:border-transparent rounded-md disabled:opacity-40 disabled:cursor-not-allowed'
-          onClick={rotateMatrix}
-          disabled={!matrixResult.isGenerated}
-        >
-          ROTAR!
-        </button>
+        <div className='flex w-full gap-4'>
+          <button
+            className='w-full text-sm bg-green-light-2 font-semibold text-background py-6 px-10 border border-green-dark-1 hover:border-transparent rounded-md disabled:opacity-40 disabled:cursor-not-allowed'
+            onClick={() => rotateMatrix(false)}
+            disabled={!matrixResult.isGenerated}
+          >
+            ROTAR ANTIHORARIO
+          </button>
+
+          <button
+            className='w-full text-sm bg-green-light-2 font-semibold text-background py-6 px-10 border border-green-dark-1 hover:border-transparent rounded-md disabled:opacity-40 disabled:cursor-not-allowed'
+            onClick={() => rotateMatrix(true)}
+            disabled={!matrixResult.isGenerated}
+          >
+            ROTAR HORARIO
+          </button>
+        </div>
 
         {matrixResult.isGenerated && <MatrixResult result={matrixResult.output} />}
       </div>

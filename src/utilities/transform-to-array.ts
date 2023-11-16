@@ -1,11 +1,17 @@
-import { Matrix } from "@/app/matrix-rotation/domain/matrix.interface";
+import { Matrix } from '@/app/matrix-rotation/domain/matrix.interface';
+import { InvalidFormatError } from './errors/exceptions';
+import { validateMatrix } from './validate-matrix';
 
-export const transformToArray = (input: string): Matrix | null => {
-  const matrix: Matrix = JSON.parse(input);
+export const transformToArray = (input: string): Matrix => {
+  try {
+    const matrix: Matrix = JSON.parse(input);
 
-  if (!Array.isArray(matrix) || !matrix.every((row) => Array.isArray(row))) {
-    throw new Error("El formato de la matriz no es válido");
+    const isValidMatrix = validateMatrix(matrix);
+
+    if (!isValidMatrix) throw new InvalidFormatError();
+
+    return matrix;
+  } catch (error) {
+    throw new InvalidFormatError();
   }
-
-  return matrix;
 };
